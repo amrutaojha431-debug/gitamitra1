@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GitaMitra 1 AI — आपका गीता साथी</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Noto+Sans+Devanagari:wght@300;400;500&family=Noto+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --gold: #FFD700;
+    --gold2: #FFA000;
+    --deep: #0D0221;
+    --purple: #1A0A3B;
+    --violet: #311B92;
+    --cream: #FFF8E7;
+    --saffron: #FF6F00;
+    --light-gold: #FFF9C4;
+    --text: #FFF8E7;
+    --muted: rgba(255,248,231,0.6);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--deep);
+    color: var(--text);
+    font-family: 'Noto Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Stars background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(1px 1px at 10% 15%, rgba(255,248,231,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 25% 40%, rgba(255,215,0,0.4) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 40% 10%, rgba(255,248,231,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 55% 30%, rgba(255,248,231,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 8%, rgba(255,215,0,0.5) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 85% 20%, rgba(255,248,231,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 45%, rgba(255,248,231,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 15% 70%, rgba(255,215,0,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 60% 80%, rgba(255,248,231,0.25) 0%, transparent 100%),
+      radial-gradient(ellipse at 50% 0%, rgba(255,160,0,0.15) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Splash Screen */
+  #splash {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 40%, #2D1560 0%, #0D0221 70%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    transition: opacity 0.8s ease;
+  }
+  #splash.hide { opacity: 0; pointer-events: none; }
+
+  .splash-icon {
+    width: 110px; height: 110px;
+    border-radius: 28px;
+    background: radial-gradient(circle at 40% 35%, #FFD700, #FF6F00);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 52px;
+    box-shadow: 0 0 60px rgba(255,215,0,0.5), 0 0 120px rgba(255,160,0,0.2);
+    animation: pulse 2s ease-in-out infinite;
+    margin-bottom: 24px;
+  }
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 0 60px rgba(255,215,0,0.5), 0 0 120px rgba(255,160,0,0.2); }
+    50% { box-shadow: 0 0 80px rgba(255,215,0,0.8), 0 0 160px rgba(255,160,0,0.35); }
+  }
+  .splash-title {
+    font-family: 'Cinzel', serif;
+    font-size: 32px; font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 3px;
+    text-shadow: 0 0 30px rgba(255,215,0,0.6);
+    margin-bottom: 6px;
+  }
+  .splash-sub {
+    font-family: 'Noto Sans Devanagari', sans-serif;
+    font-size: 14px; color: var(--muted);
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+  .splash-odia { font-size: 13px; color: rgba(255,215,0,0.5); margin-bottom: 40px; }
+  .splash-loader {
+    width: 160px; height: 2px;
+    background: rgba(255,215,0,0.15);
+    border-radius: 2px; overflow: hidden;
+  }
+  .splash-loader-bar {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--gold2), var(--gold));
+    border-radius: 2px;
+    animation: load 2.2s ease forwards;
+  }
+  @keyframes load { to { width: 100%; } }
+
+  /* Main App */
+  #app {
+    display: none;
+    flex-direction: column;
+    height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+  #app.show { display: flex; }
+
+  /* Top Bar */
+  .topbar {
+    background: rgba(26,10,59,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,215,0,0.15);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .top-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #FFD700, #FF6F00);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .top-title { font-family: 'Cinzel', serif; font-size: 17px; font-weight: 600; color: var(--gold); }
+  .top-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .top-right { margin-left: auto; display: flex; gap: 8px; }
+  .lang-btn {
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,215,0,0.3);
+    background: transparent;
+    color: var(--gold);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .lang-btn.active, .lang-btn:hover {
+    background: rgba(255,215,0,0.15);
+    border-color: var(--gold);
+  }
+
+  /* Daily Shlok Banner */
+  .shlok-banner {
+    background: linear-gradient(135deg, rgba(255,111,0,0.2), rgba(255,160,0,0.1));
+    border: 1px solid rgba(255,160,0,0.25);
+    border-left: 3px solid var(--saffron);
+    margin: 10px 12px;
+    border-radius: 10px;
+    padding: 10px 14px;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .shlok-banner:hover { background: linear-gradient(135deg, rgba(255,111,0,0.3), rgba(255,160,0,0.15)); }
+  .shlok-label { font-size: 10px; color: var(--saffron); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .shlok-text { font-family: 'Noto Sans Devanagari', sans-serif; font-size: 13px; color: var(--gold); line-height: 1.6; }
+  .shlok-chapter { font-size: 10px; color: var(--muted); margin-top: 3px; }
+
+  /* Chat Area */
+  .chat-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    scroll-behavior: smooth;
+  }
+  .chat-area::-webkit-scrollbar { width: 4px; }
+  .chat-area::-webkit-scrollbar-track { background: transparent; }
+  .chat-area::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.2); border-radius: 4px; }
+
+  /* Messages */
+  .msg { display: flex; gap: 8px; animation: fadeup 0.3s ease; }
+  @keyframes fadeup { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform:none; } }
+  .msg.user { flex-direction: row-reverse; }
+
+  .msg-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .msg.bot .msg-avatar { background: radial-gradient(circle, #FFD700, #FF6F00); }
+  .msg.user .msg-avatar { background: rgba(255,215,0,0.15); border: 1px solid rgba(255,215,0,0.25); }
+
+  .msg-bubble {
+    max-width: 78%;
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.65;
+  }
+  .msg.bot .msg-bubble {
+    background: rgba(49,27,146,0.6);
+    border: 1px solid rgba(255,215,0,0.12);
+    border-top-left-radius: 4px;
+    color: var(--cream);
+  }
+  .msg.user .msg-bubble {
+    background: linear-gradient(135deg, rgba(255,160,0,0.3), rgba(255,111,0,0.2));
+    border: 1px solid rgba(255,160,0,0.3);
+    border-top-right-radius: 4px;
+    color: var(--cream);
+  }
+  .msg-verse {
+    background: rgba(255,215,0,0.08);
+    border-left: 2px solid var(--gold);
+    padding: 6px 10px;
+    border-radius: 0 6px 6px 0;
+    margin: 8px 0;
+    font-family: 'Noto Sans Devanagari', sans-serif;
+    font-size: 13px;
+    color: var(--gold);
+    line-height: 1.7;
+  }
+  .msg-ref { font-size: 11px; color: var(--saffron); margin-top: 6px; }
+
+  /* Typing indicator */
+  .typing { display: flex; gap: 4px; align-items: center; padding: 12px 16px; }
+  .typing span {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--gold);
+    animation: blink 1.2s ease-in-out infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%,80%,100%{opacity:0.2;transform:scale(0.8)} 40%{opacity:1;transform:scale(1)} }
+
+  /* Quick chips */
+  .chips {
+    display: flex; flex-wrap: wrap; gap: 7px;
+    padding: 4px 12px 8px;
+    flex-shrink: 0;
+  }
+  .chip {
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,215,0,0.25);
+    background: rgba(26,10,59,0.8);
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Noto Sans Devanagari', sans-serif;
+  }
+  .chip:hover {
+    background: rgba(255,215,0,0.12);
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  /* Input Bar */
+  .input-bar {
+    background: rgba(13,2,33,0.95);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255,215,0,0.12);
+    padding: 10px 12px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    flex-shrink: 0;
+  }
+  .input-wrap {
+    flex: 1;
+    background: rgba(49,27,146,0.4);
+    border: 1px solid rgba(255,215,0,0.2);
+    border-radius: 22px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: border-color 0.2s;
+  }
+  .input-wrap:focus-within { border-color: rgba(255,215,0,0.5); }
+  #user-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--cream);
+    font-size: 14px;
+    font-family: 'Noto Sans Devanagari', sans-serif;
+    resize: none;
+    max-height: 80px;
+    line-height: 1.5;
+  }
+  #user-input::placeholder { color: rgba(255,248,231,0.3); }
+  .send-btn {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #FFD700, #FF6F00);
+    border: none;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    transition: transform 0.15s, box-shadow 0.15s;
+    flex-shrink: 0;
+    box-shadow: 0 4px 15px rgba(255,160,0,0.3);
+  }
+  .send-btn:hover { transform: scale(1.05); box-shadow: 0 4px 20px rgba(255,160,0,0.5); }
+  .send-btn:active { transform: scale(0.96); }
+  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* Guidance cards */
+  .guidance-cards {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;
+  }
+  .g-card {
+    background: rgba(255,215,0,0.08);
+    border: 1px solid rgba(255,215,0,0.18);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--gold);
+  }
+  .g-card-title { font-weight: 500; margin-bottom: 2px; }
+  .g-card-desc { color: var(--muted); font-size: 11px; }
+</style>
+</head>
+<body>
+
+<!-- Splash -->
+<div id="splash">
+  <div class="splash-icon">🕉️</div>
+  <div class="splash-title">GitaMitra 1</div>
+  <div class="splash-sub">आपका AI गीता साथी</div>
+  <div class="splash-odia">ଆପଣଙ୍କ ଗୀତା ସାଥୀ</div>
+  <div class="splash-loader"><div class="splash-loader-bar"></div></div>
+</div>
+
+<!-- App -->
+<div id="app">
+
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="top-icon">🕉️</div>
+    <div>
+      <div class="top-title">GitaMitra 1</div>
+      <div class="top-sub">AI Spiritual Guide</div>
+    </div>
+    <div class="top-right">
+      <button class="lang-btn active" onclick="setLang('hi')" id="btn-hi">हिंदी</button>
+      <button class="lang-btn" onclick="setLang('en')" id="btn-en">EN</button>
+      <button class="lang-btn" onclick="setLang('od')" id="btn-od">ଓଡ଼ିଆ</button>
+    </div>
+  </div>
+
+  <!-- Daily Shlok -->
+  <div class="shlok-banner" onclick="askShlok()">
+    <div class="shlok-label">✨ Aaj ka Shlok — Today's Verse</div>
+    <div class="shlok-text" id="daily-shlok">कर्मण्येवाधिकारस्ते मा फलेषु कदाचन</div>
+    <div class="shlok-chapter">Bhagavad Gita · Chapter 2, Verse 47 · Tap for meaning 👆</div>
+  </div>
+
+  <!-- Chat -->
+  <div class="chat-area" id="chat"></div>
+
+  <!-- Quick chips -->
+  <div class="chips" id="chips">
+    <div class="chip" onclick="sendChip(this.innerText)">Karma Yoga kya hai? 🙏</div>
+    <div class="chip" onclick="sendChip(this.innerText)">Tension mein kya kare?</div>
+    <div class="chip" onclick="sendChip(this.innerText)">Aatma kya hoti hai?</div>
+    <div class="chip" onclick="sendChip(this.innerText)">ଜୀବନର ଉଦ୍ଦେଶ୍ୟ କ'ଣ?</div>
+    <div class="chip" onclick="sendChip(this.innerText)">Fear se kaise baahu?</div>
+    <div class="chip" onclick="sendChip(this.innerText)">Dhyan kaise kare?</div>
+  </div>
+
+  <!-- Input -->
+  <div class="input-bar">
+    <div class="input-wrap">
+      <textarea id="user-input" rows="1" placeholder="Gita se kuch bhi poocho... 🙏" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+    </div>
+    <button class="send-btn" id="send-btn" onclick="sendMessage()">➤</button>
+  </div>
+
+</div>
+
+<script>
+const API_URL = "https://api.anthropic.com/v1/messages";
+let currentLang = 'hi';
+let isLoading = false;
+const conversationHistory = [];
+
+const SYSTEM_PROMPT = `You are GitaMitra 1 AI — a wise, warm, and deeply knowledgeable spiritual guide based on the Bhagavad Gita. You are the digital form of Lord Krishna's wisdom, helping people in everyday life.
+
+PERSONALITY:
+- Warm, compassionate, wise like Krishna
+- Use Hinglish (Hindi + English mix) by default
+- When user writes in Odia, respond in Odia
+- When user writes in English, respond in English
+- Always cite the relevant Gita chapter and verse when sharing wisdom
+- Use 🕉️ 🙏 ✨ 🌸 emojis naturally
+
+RESPONSE FORMAT:
+- Start with a warm acknowledgment
+- Share relevant Gita wisdom with the original Sanskrit shlok in Devanagari
+- Give the meaning in the user's language
+- Apply it practically to their situation
+- End with an encouraging line
+
+SPECIAL INSTRUCTIONS:
+- For Odia users: respond warmly in Odia with Sanskrit shloks
+- Keep responses concise but meaningful (not too long)
+- Always include chapter and verse reference like "Gita 2.47"
+- If asked about guidance paths, mention Karma Yoga, Bhakti Yoga, Jnana Yoga appropriately
+
+You are GitaMitra — Gita ka Mitra, everyone's friend through Gita's wisdom. 🙏`;
+
+// Splash
+setTimeout(() => {
+  document.getElementById('splash').classList.add('hide');
+  setTimeout(() => {
+    document.getElementById('splash').style.display = 'none';
+    document.getElementById('app').classList.add('show');
+    addWelcomeMessage();
+  }, 800);
+}, 2500);
+
+function addWelcomeMessage() {
+  const greetings = {
+    hi: { text: "Jai Shri Krishna! 🙏\n\nMain GitaMitra hoon — Bhagavad Gita ki rooshani mein aapka guide. Aap mujhse life ke kisi bhi sawaal ke baare mein puch sakte ho — tension, career, relationships, fear, ya atmagyaan — sab ke liye Gita mein jawab hai! ✨\n\nKya poochna chahte ho aaj?", verse: "यदा यदा हि धर्मस्य ग्लानिर्भवति भारत", ref: "Gita 4.7 — Jab bhi dharma ka patan hota hai, main avatrit hota hoon." },
+    en: { text: "Jai Shri Krishna! 🙏\n\nI am GitaMitra — your AI guide through the timeless wisdom of the Bhagavad Gita. Ask me anything about life, purpose, fear, relationships, or self-discovery. The Gita has an answer for everything! ✨\n\nWhat would you like to know today?", verse: "यदा यदा हि धर्मस्य ग्लानिर्भवति भारत", ref: "Gita 4.7 — Whenever dharma declines, I appear." },
+    od: { text: "ଜୟ ଶ୍ରୀ କୃଷ୍ଣ! 🙏\n\nମୁଁ ଗୀତାମିତ୍ର — ଭଗବଦ୍ ଗୀତାର ଜ୍ଞାନ ଦ୍ୱାରା ଆପଣଙ୍କ ଗାଇଡ। ଜୀବନ, ଭୟ, ଉଦ୍ଦେଶ୍ୟ ବା ଆତ୍ମ-ଜ୍ଞାନ — ଯେ କୌଣସି ପ୍ରଶ୍ନ ପଚାରନ୍ତୁ! ✨\n\nଆଜି ଆପଣ କ'ଣ ଜାଣିବାକୁ ଚାହାଁନ୍ତି?", verse: "यदा यदा हि धर्मस्य ग्लानिर्भवति भारत", ref: "Gita 4.7 — ଯେତେବେଳେ ଧର୍ମ ହ୍ରାସ ପାଏ, ମୁଁ ଅବତୀର୍ଣ ହୁଏ।" }
+  };
+  const g = greetings[currentLang];
+  addBotMessage(g.text, g.verse, g.ref);
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  ['hi','en','od'].forEach(l => document.getElementById('btn-'+l).classList.toggle('active', l===lang));
+  const placeholders = { hi: 'Gita se kuch bhi poocho... 🙏', en: 'Ask anything from the Gita... 🙏', od: 'ଗୀତାରୁ କିଛି ପଚାରନ୍ତୁ... 🙏' };
+  document.getElementById('user-input').placeholder = placeholders[lang];
+}
+
+function askShlok() {
+  sendChip("Aaj ka shlok samjhao 🙏");
+}
+
+function sendChip(text) {
+  document.getElementById('user-input').value = text;
+  sendMessage();
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 80) + 'px';
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function addBotMessage(text, verse, ref) {
+  const chat = document.getElementById('chat');
+  const div = document.createElement('div');
+  div.className = 'msg bot';
+  let inner = `<div class="msg-avatar">🕉️</div><div class="msg-bubble"><div style="white-space:pre-wrap">${escHtml(text)}</div>`;
+  if (verse) inner += `<div class="msg-verse">${escHtml(verse)}</div>`;
+  if (ref) inner += `<div class="msg-ref">📖 ${escHtml(ref)}</div>`;
+  inner += `</div>`;
+  div.innerHTML = inner;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function addUserMessage(text) {
+  const chat = document.getElementById('chat');
+  const div = document.createElement('div');
+  div.className = 'msg user';
+  div.innerHTML = `<div class="msg-avatar">🙏</div><div class="msg-bubble">${escHtml(text)}</div>`;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function showTyping() {
+  const chat = document.getElementById('chat');
+  const div = document.createElement('div');
+  div.className = 'msg bot'; div.id = 'typing-indicator';
+  div.innerHTML = `<div class="msg-avatar">🕉️</div><div class="msg-bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function hideTyping() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+function escHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+async function sendMessage() {
+  const input = document.getElementById('user-input');
+  const text = input.value.trim();
+  if (!text || isLoading) return;
+
+  input.value = ''; input.style.height = 'auto';
+  document.getElementById('chips').style.display = 'none';
+  addUserMessage(text);
+  conversationHistory.push({ role: 'user', content: text });
+  isLoading = true;
+  document.getElementById('send-btn').disabled = true;
+  showTyping();
+
+  try {
+    const resp = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYSTEM_PROMPT,
+        messages: conversationHistory
+      })
+    });
+    const data = await resp.json();
+    hideTyping();
+
+    const reply = data.content?.[0]?.text || "Kshama karo 🙏 Ek baar phir poocho.";
+    conversationHistory.push({ role: 'assistant', content: reply });
+    addBotMessage(reply, null, null);
+  } catch(err) {
+    hideTyping();
+    addBotMessage("🙏 Network issue hai. Thoda ruk ke phir try karo.\n\nYaad rakho — Gita 6.5: Apna uddhaar aap karo!", null, null);
+  }
+
+  isLoading = false;
+  document.getElementById('send-btn').disabled = false;
+  document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+}
+</script>
+</body>
+</html>
